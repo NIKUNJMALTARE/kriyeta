@@ -170,7 +170,7 @@ function App() {
         isSidebarVisible ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-blue-600 dark:text-blue-400">n8n Agent</h1>
+          <h1 className="text-xl font-semibold text-blue-600 dark:text-blue-400">Agent Mesh</h1>
           <div className="flex gap-2">
             <button
               onClick={toggleTheme}
@@ -234,7 +234,7 @@ function App() {
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mb-2">
-                  Welcome to n8n Agent Chat
+                  Welcome to Agent Mesh Chat
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   Ask anything to get started, or select a previous conversation from the sidebar.

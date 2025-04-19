@@ -143,7 +143,7 @@ class UIController {
   showWelcomeMessage() {
     this.currentChat.innerHTML = `
       <div class="welcome-message">
-        <h2>Welcome to n8n Agent Chat</h2>
+        <h2>Welcome to Agent Mesh Chat</h2>
         <p>Ask anything to get started, or select a previous conversation from the sidebar.</p>
       </div>
     `;
