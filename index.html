@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>n8n Prompt UI</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 16px;
+      padding: 0.5rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .output {
+      margin-top: 2rem;
+      background: #fff;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+    }
+    .history {
+      margin-top: 2rem;
+      border-top: 1px solid #ccc;
+      padding-top: 1rem;
+    }
+    .loader {
+      margin-top: 1rem;
+      font-style: italic;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Talk to n8n Agent</h1>
+  <textarea id="prompt" placeholder="Enter your prompt here..."></textarea>
+  <br />
+  <button onclick="sendPrompt()">Send</button>
+  <div class="loader" id="loader" style="display: none;">⏳ Waiting for response...</div>
+  <div class="output" id="output"></div>
+  <div class="history" id="history"></div>
+
+  <script>
+    const webhookUrl = "https://lavesh.app.n8n.cloud/webhook-test/06b8da13-4a71-41f6-92fe-7250320f8980";
+
+    function sendPrompt() {
+      const prompt = document.getElementById("prompt").value.trim();
+      const outputDiv = document.getElementById("output");
+      const loader = document.getElementById("loader");
+
+      if (!prompt) return;
+
+      // Show loading indicator
+      loader.style.display = "block";
+      outputDiv.textContent = "";
+
+      fetch(webhookUrl, {
+        method: "POST",
+        body: prompt,
+        headers: {
+          "Content-Type": "text/plain"
+        }
+      })
+      .then(response => response.text())
+      .then(text => {
+        loader.style.display = "none";
+        outputDiv.textContent = text;
+        saveHistory(prompt, text);
+        renderHistory();
+      })
+      .catch(error => {
+        loader.style.display = "none";
+        outputDiv.textContent = "❌ Error: " + error.message;
+      });
+    }
+
+    function saveHistory(prompt, response) {
+      const history = JSON.parse(localStorage.getItem("n8nHistory") || "[]");
+      history.unshift({ prompt, response, time: new Date().toISOString() });
+      localStorage.setItem("n8nHistory", JSON.stringify(history.slice(0, 10))); // keep latest 10
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("n8nHistory") || "[]");
+      const historyDiv = document.getElementById("history");
+      if (history.length === 0) {
+        historyDiv.innerHTML = "<em>No history yet.</em>";
+        return;
+      }
+
+      historyDiv.innerHTML = "<h3>History (latest 10)</h3>" + history.map(entry => `
+        <div style="margin-bottom: 1rem;">
+          <strong>Prompt:</strong><br/>${entry.prompt}<br/>
+          <strong>Response:</strong><br/>${entry.response}<br/>
+          <small>${new Date(entry.time).toLocaleString()}</small>
+        </div>
+      `).join("");
+    }
+
+    renderHistory(); // Load on startup
+  </script>
+</body>
+</html>
