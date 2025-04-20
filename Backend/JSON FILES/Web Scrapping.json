@@ -1,0 +1,195 @@
+{
+  "name": "AI Powered Web Scraping with Jina, Google Sheets and OpenAI : the EASY way",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c3ef40df-084e-435c-9a11-3aa0a2f94f36",
+      "name": "When clicking \"Test workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        720,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.results",
+        "options": {}
+      },
+      "id": "e0583472-a450-4582-83bc-84a014bea543",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1520,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13q2TjwsaOj-MoZfJ2H0ycg7BeJfJXG3E_ZfiEB5Tpms",
+          "mode": "list",
+          "cachedResultName": "Books Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13q2TjwsaOj-MoZfJ2H0ycg7BeJfJXG3E_ZfiEB5Tpms/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13q2TjwsaOj-MoZfJ2H0ycg7BeJfJXG3E_ZfiEB5Tpms/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b8aa573d-5b63-4669-900f-bcc915b6ad41",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1760,
+        240
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YzJNiwecmGb8PH8U",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a63c3ab3-6aab-43b2-8af6-8b00e24e0ee6",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1300,
+        480
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "TVGR03p1QpLcJfVo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.data }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"results\": {\n      \"type\": \"array\",\n      \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"price\": {\n              \"type\": \"string\"\n              },\n            \"title\": {\n              \"type\": \"string\"\n            },\n            \"image_url\": {\n              \"type\": \"string\"\n            },\n            \"product_url\": {\n              \"type\": \"string\"\n            },\n            \"availability\": {\n              \"type\": \"string\"\n            }            \n           }\n      }\n  }\n}",
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value.\nAlways output the data in a json array called results.  Each book should have a title, price, availability and product_url, image_url"
+        }
+      },
+      "id": "40326966-0c46-4df2-8d80-fa014e05b693",
+      "name": "Information Extractor",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        1160,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://r.jina.ai/http://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "8ddca560-8da7-4090-b865-0523f95ca463",
+      "name": "Jina Fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        940,
+        240
+      ],
+      "typeVersion": 4.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jina Fetch": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Test workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Jina Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2ce39c78-256b-4bbc-921a-834764d05135",
+  "meta": {
+    "templateId": "2552",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1403ce16dd3278614c854a5d1da570c623bc7d4863a5ba064f92aa1205ac7edd"
+  },
+  "id": "YxD54ZSE1rGeZy6s",
+  "tags": []
+}

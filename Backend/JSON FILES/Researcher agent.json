@@ -1,0 +1,219 @@
+{
+  "name": "Researcher agent",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "// Extract the query from the input\nconst telegramMessage = $input.all()[0].json.text;\n\nreturn [\n  {\n    json: {\n      query: telegramMessage,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "id": "6484d083-6779-4ef4-a4ef-e8b3acdf75dc",
+      "name": "Extract Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        100,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://lavesh.app.n8n.cloud/webhook-test/06b8da13-4a71-41f6-92fe-7250320f8980",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "depth",
+              "value": "comprehensive"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b5ae6287-9734-4ced-a633-4d9761165e1c",
+      "name": "Research Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        280,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process and analyze the research results\nconst researchResults = $input.all()[0].json.results;\nconst originalQuery = $input.all()[0].json.query;\n\n// Analyze the findings\nlet analysis = {\n  query: originalQuery,\n  summary: '',\n  keyPoints: [],\n  confidence: 0,\n  sourcesCount: 0\n};\n\nif (researchResults && researchResults.findings) {\n  // Calculate confidence based on number and quality of sources\n  analysis.sourcesCount = researchResults.findings.length;\n  analysis.confidence = Math.min(100, researchResults.findings.length * 10);\n  \n  // Extract key points\n  analysis.keyPoints = researchResults.findings.map(finding => finding.highlight || finding.summary).filter(Boolean);\n  \n  // Generate a summary\n  analysis.summary = researchResults.summary || 'No summary available';\n}\n\nreturn [\n  {\n    json: {\n      originalQuery,\n      analysis,\n      rawResults: researchResults\n    }\n  }\n];"
+      },
+      "id": "b6447e68-7850-4108-b5b7-4a2eae76d5ac",
+      "name": "Analysis Agent",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://lavesh.app.n8n.cloud/webhook-test/06b8da13-4a71-41f6-92fe-7250320f8980",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "originalQuery",
+              "value": "={{ $json.originalQuery }}"
+            },
+            {
+              "name": "analysis",
+              "value": "={{ $json.analysis }}"
+            },
+            {
+              "name": "rawData",
+              "value": "={{ $json.rawResults }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d768f214-21cb-4aa9-b88d-ccec0a91acf1",
+      "name": "Validation Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        720,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Format the final response with validation results\nconst validationResults = $input.all()[0].json;\nconst analysis = $input.all()[0].json.analysis || {};\nconst originalQuery = $input.all()[0].json.originalQuery;\n\nlet responseMessage = '';\n\n// Format the message\nresponseMessage = `📊 Results for: \"${originalQuery}\"\n\n`;\nresponseMessage += `📝 Summary: ${analysis.summary || validationResults.summary}\n\n`;\n\n// Add validation status\nif (validationResults.validationPassed) {\n  responseMessage += `✅ Validation Passed (${validationResults.confidenceScore || ''}%)\n\n`;\n} else {\n  responseMessage += `⚠️ Validation Issues Detected (${validationResults.confidenceScore || ''}%)\n\n`;\n}\n\n// Add key points\nif (validationResults.keyPoints && validationResults.keyPoints.length > 0) {\n  responseMessage += `🔑 Key Points:\\n`;\n  validationResults.keyPoints.forEach((point, index) => {\n    responseMessage += `${index + 1}. ${point}\\n`;\n  });\n  responseMessage += '\\n';\n}\n\n// Add warnings or cautions if any\nif (validationResults.warnings && validationResults.warnings.length > 0) {\n  responseMessage += `⚠️ Notes:\\n`;\n  validationResults.warnings.forEach((warning, index) => {\n    responseMessage += `• ${warning}\\n`;\n  });\n}\n\n// Add footer\nresponseMessage += `\\n🔍 Based on ${validationResults.sourcesCount || analysis.sourcesCount || 0} sources`;\n\nreturn [\n  {\n    json: {\n      responseType: 'message',\n      responseMessage: responseMessage,\n      chat_id: $input.all()[0].json.message,\n      originalData: {\n        analysis,\n        validation: validationResults\n      }\n    }\n  }\n];"
+      },
+      "id": "4d573463-a0da-4ad7-a1ca-69a3117ae597",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -120,
+        -40
+      ],
+      "id": "506e78c9-8c63-4597-aba8-028f866195de",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39c2f302-03be-4464-a17a-d7cc481d6d44",
+              "name": "=response",
+              "value": "={{$json.responseMessage}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1adadc9-5c5f-4b4c-8594-7ebc014d77f9",
+      "name": "Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1140,
+        -40
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Query": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Validation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Extract Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9be82dc7-b241-4d16-92db-3ed01ea85f42",
+  "meta": {
+    "instanceId": "1403ce16dd3278614c854a5d1da570c623bc7d4863a5ba064f92aa1205ac7edd"
+  },
+  "id": "nB9pTAzkZ79kuL35",
+  "tags": []
+}

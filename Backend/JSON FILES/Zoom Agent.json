@@ -1,0 +1,347 @@
+{
+  "name": "MainZoom Meeting",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "= <Role>\n        <Name>ZoomMeetingAgent</Name>\n        <Description>\n            You are responsible for creating Zoom meetings. In order to do this you decide which tool is best between the following: Creates_Zoom_Meeting, Get_Zoom_Meetings\n        </Description>\n    </Role>\n\n    <Goal>\n        <Primary>\n            To manage Zoom meeting scheduling and retrieval tasks by obtaining and passing the necessary access token before calling the relevant Zoom tools.\n        </Primary>\n    </Goal>\n\n    <Instructions>\n        <Instruction>1. Read and interpret the user’s request to determine if it involves creating a Zoom meeting or retrieving existing/upcoming Zoom meetings.</Instruction>\n        <Instruction>2. Obtain an access token from the Zoom_Access_Token tool. This step must occur before any attempts to create or retrieve Zoom meetings.</Instruction>\n        <Instruction>3. If creating a new Zoom meeting is requested, call the Creates_Zoom_Meeting tool with:\n            <SubInstruction>- chatInput: The user’s query/request</SubInstruction>\n            <SubInstruction>- accessToken: The token obtained from Zoom_Access_Token</SubInstruction>\n        </Instruction>\n        <Instruction>4. If retrieving upcoming Zoom meetings is requested, call the Get_Zoom_Meetings tool with:\n            <SubInstruction>- chatInput: The user’s query/request</SubInstruction>\n            <SubInstruction>- accessToken: The token obtained from Zoom_Access_Token</SubInstruction>\n        </Instruction>\n        <Instruction>5. Return a clear, user-friendly response with the results of the requested action.</Instruction>\n    </Instructions>\n\nIMPORTANT:\nWhen passing zoom access tokens, you are to directly copy and paste it into the accessToken fields. Do not add or take away any characters.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        220,
+        -100
+      ],
+      "id": "3c1f0d1d-89ff-4059-9c95-8b6447bd99c3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "name": "OpenAI Chat Model",
+      "id": "8b8d3ea3-a0bb-4278-9c37-6d436cd2749a",
+      "credentials": {
+        "openAiApi": {
+          "id": "TVGR03p1QpLcJfVo",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        140,
+        220
+      ],
+      "name": "Simple Memory",
+      "id": "57c12c2b-75f6-4cfd-9f9f-c1d2ba76db50"
+    },
+    {
+      "parameters": {
+        "name": "Zoom_Access_Token",
+        "description": "Get Zoom token before action",
+        "workflowId": {
+          "__rl": true,
+          "value": "CdW8yaCYxNE3ZA1D",
+          "mode": "list",
+          "cachedResultName": "Access Token"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "chatInput"
+          ],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        280,
+        220
+      ],
+      "name": "Get Access Token",
+      "id": "6b1188b2-c66b-40cc-b07a-ab00ee36412b"
+    },
+    {
+      "parameters": {
+        "name": "Get_Zoom_Meetings",
+        "workflowId": {
+          "__rl": true,
+          "value": "2e4QveD140lsV3t3",
+          "mode": "list",
+          "cachedResultName": "GetZoomMeeting"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatInput": "={{ $fromAI('eventDetails') }}",
+            "accessToken": "={{ $fromAI('accessToken') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "accessToken",
+              "displayName": "accessToken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        460,
+        220
+      ],
+      "name": "Get Zoom Meetings",
+      "id": "121ed299-8bae-4063-8d23-458d4154d020"
+    },
+    {
+      "parameters": {
+        "name": "Creates_Zoom_Meetings",
+        "workflowId": {
+          "__rl": true,
+          "value": "oGyR6p6L8bU1j3KV",
+          "mode": "list",
+          "cachedResultName": "CreateMeeting"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatInput": "={{ $fromAI('eventDetails') }}",
+            "accessToken": "={{ $fromAI('accessToken') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "accessToken",
+              "displayName": "accessToken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        640,
+        220
+      ],
+      "name": "Creates Zoom Meetings",
+      "id": "f3c38896-af1c-478a-baeb-3e299ad99ed4"
+    },
+    {
+      "parameters": {
+        "chatId": "1772859858",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        -100
+      ],
+      "id": "6924df24-1436-4a64-bafd-3bd5ad328254",
+      "name": "Telegram",
+      "webhookId": "da4422e6-fc63-431f-9019-998e43afc59d",
+      "credentials": {
+        "telegramApi": {
+          "id": "iemaQI0CpkdmaZo1",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LFE8vPFSfZOhYuf4",
+          "mode": "list",
+          "cachedResultName": "ultimate-agent-33 copy"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -100
+      ],
+      "id": "ab512ab7-e108-407c-ab7b-d51f404331f9",
+      "name": "Execute Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Zoom Meetings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creates Zoom Meetings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b0df99f4-e029-4d30-a1b8-39440dc43b50",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1403ce16dd3278614c854a5d1da570c623bc7d4863a5ba064f92aa1205ac7edd"
+  },
+  "id": "tQrQ5YyX0gSAA96d",
+  "tags": []
+}

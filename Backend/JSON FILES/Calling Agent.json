@@ -1,0 +1,119 @@
+{
+  "name": "Calling Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rest.clicksend.com/v3/voice/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messages\": [\n    {\n      \"source\": \"n8n\",\n      \"body\": \"{{ $('Set Message').item.json.Message }}\",\n      \"to\": \"{{ $('Set Message').item.json.To }}\",\n      \"voice\": \"{{ $('Set Message').item.json.Voice }}\",\n      \"lang\": \"{{ $('Set Message').item.json.Lang }}\",\n      \"machine_detection\": 1\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c476a3c0-c2b0-4e2b-9034-91b2d56bf0d9",
+      "name": "Send Voice1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        240,
+        -20
+      ],
+      "typeVersion": 4,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "ll9v2LqQEaI5pNC3",
+          "name": "Unnamed credential 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "To",
+              "value": "+918989621866"
+            },
+            {
+              "name": "Voice",
+              "value": "male"
+            },
+            {
+              "name": "Lang",
+              "value": "en-us"
+            },
+            {
+              "name": "Message",
+              "value": "={{ $json.Message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5a4de4f-4342-4f7d-bd26-48c9e7f5f188",
+      "name": "Set Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Message"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        -20
+      ],
+      "id": "dba549f6-e2d5-4f52-bbd5-dade848af80c",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set Message": {
+      "main": [
+        [
+          {
+            "node": "Send Voice1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e320123c-1818-4812-909e-1936ed5e02bd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1403ce16dd3278614c854a5d1da570c623bc7d4863a5ba064f92aa1205ac7edd"
+  },
+  "id": "s3LdTvQ9j7D7NFb6",
+  "tags": []
+}
